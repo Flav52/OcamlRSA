@@ -1,6 +1,8 @@
+#load "nums.cma"
 open Num;;
 open Big_int;;
 open Random;;
+open Printf;;
 Random.self_init();;
 
 #use "./primes.ml";;
@@ -136,7 +138,129 @@ let rec prime n=
   let res= ref (isPrime !a)in
   if !res then !a else prime n;;
 
-let genKeys n=
-  let p= prime n in
-  let q= prime n in
-  p*/q;;
+let writeToFile mess name =
+  let oc=open_out name in
+  fprintf oc "%s" mess;
+  close_out oc;;
+
+let readFromFile name =
+  let ic = open_in name in
+  let line = input_line ic in   
+  flush stdout;               
+  close_in ic ;
+  line;;
+
+let phi p q =
+  (pred_num p)*/(pred_num q);;
+
+let gcd_num a b=
+  let c=big_int_of_num a in
+  let d=big_int_of_num b in
+  let e=gcd_big_int c d in
+  num_of_big_int e;;
+
+let find_e n =
+  let rec find n e =
+    if (gcd_num n e)=/un then
+      e
+    else
+      find n (e+/deux)
+  in find n (num_of_int 3);;
+
+let getKeyIndex =
+  let str=ref(readFromFile "indexK") in
+  int_of_string !str;;
+
+let rec invMOD n d=
+  let x=ref zero in
+  let y=ref un in
+  let u=ref un in
+  let v=ref zero in
+  let a=ref n in
+  let b=ref d in
+  while (!a<>/zero) do
+    let q= !b//(!a) in
+    let r= mod_num !b !a in
+    let m= !x-/(!u)*/q in
+    let n= !y-/(!v)*/q in
+    b:=!a;
+    a:=r;
+    x:=!u;
+    y:=!v;
+    u:=m;
+    v:=n;
+  done;
+  mod_num (!x+/d) d;;
+
+  let ext_gcd x y=
+    let rec extended_gcd x y =
+      if y =/ zero then
+        (un, zero, x)
+      else
+        let q = x//y in
+        let (u, v, g) = extended_gcd y (x-/q*/y) in
+        (v, u-/q*/v, g) in
+    match (extended_gcd x y) with
+    (a,b,c)-> a;;
+
+
+let rec my_gcd a b=
+  if (b=/zero) then (a,un,zero)
+  else
+    begin
+      let (d',x',y')= my_gcd b (mod_num a b) in
+      let (d,x,y)=(d',y',x'-/(a//b)*/y') in
+      (d,x,y)
+    end;;
+
+#use "tux.ml";;
+
+(*La fonction rend 0 avec a=Num.3 et n et Num.20
+ alors que le résultat attendu est 7            *)
+let i_binv_mod_BROKEN a n=
+  num_of_big_int(binv_mod ((big_int_of_num a),(big_int_of_num a)));;
+
+(* On a recours à de multiples casts,
+ certes ce n'est pas très propre, 
+ mais le seul moyen que nous avons trouvé. *)
+let i_binv_mod a n=
+let ba=big_int_of_string (string_of_num a) in
+let bn=big_int_of_string (string_of_num n) in
+  num_of_big_int(binv_mod (ba,bn));;
+
+
+let rec expRapide x n=
+  if(n=/un) then x
+  else 
+    begin
+      if(mod_num n deux)=/zero then (expRapide (x*/x) (n//deux))
+      else
+        x*/(expRapide (x*/x) ((pred_num n)//deux));
+    end
+
+(*let get_ascii_list l mess=
+  match mess with
+  "" -> l;
+  |t^q -> get_ascii_list [t]@l q;;*)
+
+
+let crypt e m mess=
+  let l = get_ascii_list
+
+
+
+
+let genKeys nb=
+  let ind= (getKeyIndex+1) in
+  let p=  prime nb in
+  let q=  prime nb in
+  let n= p*/q in
+  let e= find_e (phi p q)in
+  let d= i_binv_mod e (phi p q) in
+  let strPu =ref ((string_of_num e)^" "^(string_of_num n)) in
+  let strPr =ref ((string_of_num d)^" "^(string_of_num n)) in
+  let file=ref ("KEYS/"^(string_of_int ind)) in
+  writeToFile !strPu ((!file)^".pub");
+  writeToFile !strPr ((!file)^".prv");
+  writeToFile (string_of_int (ind)) "indexK";
+  [p;q;n;e;d;(phi p q)];;
