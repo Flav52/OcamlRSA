@@ -1,3 +1,5 @@
+open Big_int;;
+
 (* Code tiré du site http://informathix.tuxfamily.org/?q=node/32 *)
 let (&+) a b = Big_int.add_big_int a b;;
 let (&*) a b = Big_int.mult_big_int a b;;
